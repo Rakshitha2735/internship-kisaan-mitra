@@ -76,6 +76,50 @@ async def get_profile(
     )
 
 
+@router.post("/user/fix-crop-states")
+async def fix_crop_states(
+    user=Depends(_get_user_from_header),
+    db=Depends(get_db),
+):
+    """
+    One-time fix: updates all of the user's saved crops to use their
+    actual registered state instead of the old hardcoded 'Karnataka' default.
+
+    Call this once from the app after the CropSelectionScreen fix is deployed.
+    Farmers who registered from non-Karnataka states had crops saved with
+    state='Karnataka', which caused the alert engine to never match them.
+    """
+    actual_state = user.get("location_state")
+    actual_district = user.get("location_district")
+
+    if not actual_state:
+        raise HTTPException(status_code=400, detail="User has no location_state set")
+
+    crops = user.get("crops", [])
+    if not crops:
+        return {"message": "No crops to fix", "fixed": 0}
+
+    fixed = 0
+    updated_crops = []
+    for crop in crops:
+        # Case-insensitive comparison — handles "karnataka" vs "Karnataka"
+        if crop.get("state", "").strip().lower() != actual_state.strip().lower():
+            crop["state"] = actual_state
+            crop["district"] = actual_district or crop.get("district", "")
+            fixed += 1
+        updated_crops.append(crop)
+
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"crops": updated_crops}},
+    )
+
+    return {
+        "message": f"Fixed {fixed} crops — state updated to '{actual_state}'",
+        "fixed": fixed,
+        "total_crops": len(crops),
+    }
+
 @router.put("/user/fcm-token")
 async def update_fcm_token(
     token_data: dict,

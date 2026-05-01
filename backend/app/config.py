@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     # ── OpenWeatherMap ─────────────────────────────────────────────────────
     OPENWEATHER_API_KEY: str = ""
 
+    # ── Groq AI (Free — crop recommendations) ─────────────────────────────
+    GROQ_API_KEY: str = ""
+
     # ── Alert Thresholds ──────────────────────────────────────────────────
     BIG_JUMP_THRESHOLD: float = 0.10
     CRITICAL_THRESHOLD: float = 0.15
@@ -44,7 +47,7 @@ class Settings(BaseSettings):
 
     # ── Scheduler ─────────────────────────────────────────────────────────
     PRICE_FETCH_INTERVAL_MINUTES: int = 30
-    WEATHER_FETCH_INTERVAL_MINUTES: int = 30  # NEW
+    WEATHER_FETCH_INTERVAL_MINUTES: int = 30
 
     class Config:
         env_file = ".env"

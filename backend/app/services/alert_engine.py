@@ -78,6 +78,8 @@ class AlertEngine:
                 alert_type=alert_type,
                 commodity=commodity,
                 market=market,
+                state=state,          # ✅ ADD
+                district=district,    # ✅ ADD
                 current_price=current_price,
                 previous_price=previous_price,
                 change_pct=change_pct,
@@ -180,6 +182,8 @@ class AlertEngine:
         alert_type: AlertType,
         commodity: str,
         market: str,
+        state: str,          # ✅ ADD
+        district: str,
         current_price: float,
         previous_price: float,
         change_pct: float,
@@ -193,16 +197,24 @@ class AlertEngine:
 
         # Build message content
         if alert_type == AlertType.CRITICAL:
-            title = (
-                "Urgent Price Alert!"
-                if language == "en"
-                else "ತುರ್ತು ಬೆಲೆ ಎಚ್ಚರಿಕೆ!"
-            )
+            title = {
+                "kn": "ತುರ್ತು ಬೆಲೆ ಎಚ್ಚರಿಕೆ!",
+                "hi": "तत्काल मूल्य अलर्ट!",
+                "te": "అత్యవసర ధర హెచ్చరిక!",
+                "ta": "அவசர விலை எச்சரிக்கை!",
+                "mr": "तातडीचा भाव इशारा!",
+            }.get(language, "Urgent Price Alert!")
             body_en = sms_service.build_critical_alert_message(commodity, market, current_price, "en")
             body_kn = sms_service.build_critical_alert_message(commodity, market, current_price, "kn")
         else:
             direction = "increased" if change_pct > 0 else "decreased"
-            title = f"{commodity} price {direction}"
+            title = {
+                "kn": f"{commodity} ಬೆಲೆ {'ಹೆಚ್ಚಾಗಿದೆ' if change_pct > 0 else 'ಕಡಿಮೆಯಾಗಿದೆ'}",
+                "hi": f"{commodity} मूल्य {'बढ़ा' if change_pct > 0 else 'घटा'}",
+                "te": f"{commodity} ధర {'పెరిగింది' if change_pct > 0 else 'తగ్గింది'}",
+                "ta": f"{commodity} விலை {'அதிகரித்தது' if change_pct > 0 else 'குறைந்தது'}",
+                "mr": f"{commodity} भाव {'वाढला' if change_pct > 0 else 'घटला'}",
+            }.get(language, f"{commodity} price {direction}")
             body_en = sms_service.build_price_alert_message(commodity, market, current_price, change_pct, "en")
             body_kn = sms_service.build_price_alert_message(commodity, market, current_price, change_pct, "kn")
 
@@ -250,6 +262,8 @@ class AlertEngine:
             "alert_type": alert_type.value,
             "commodity": commodity,
             "market": market,
+            "state": state,          # ✅ ADD THIS
+            "district": district,    # ✅ ADD THIS
             "old_price": previous_price,
             "new_price": current_price,
             "change_pct": round(change_pct, 2),
